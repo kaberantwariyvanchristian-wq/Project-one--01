@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommunityHub — Local Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Recursive:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f4ef;--s1:#ffffff;--s2:#f0ece4;--s3:#e8e2d8;
+  --border:#ddd8ce;--border2:#ccc6bc;
+  --text:#1e1c18;--muted:#8a8478;--faint:#ccc6bc;
+  --ink:#1e1c18;--paper:#f7f4ef;
+  --green:#2d7a4f;--green-l:#e0f0e8;--green-d:#1a4f32;
+  --amber:#c07a1a;--amber-l:#fdf0d8;--amber-d:#7a4c0a;
+  --blue:#2a6aad;--blue-l:#e0ecf8;--blue-d:#1a4470;
+  --rose:#b84060;--rose-l:#f8e0e8;--rose-d:#7a2040;
+  --purple:#6040a0;--purple-l:#ece8f8;
+  --ff:'Cabinet Grotesk',sans-serif;
+  --fb:'Recursive',sans-serif;
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--ff);min-height:100vh;overflow-x:hidden}
+
+/* texture */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e1c18' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* ── LAYOUT ── */
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--ink);color:#f7f4ef;padding:2rem 1.25rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{margin-bottom:2.5rem}
+.logo-mark{font-size:1.5rem;font-weight:900;letter-spacing:-0.04em;line-height:1;color:#f7f4ef}
+.logo-mark span{color:#a8d8a8}
+.logo-sub{font-family:var(--fb);font-size:9px;letter-spacing:0.18em;color:rgba(247,244,239,.4);text-transform:uppercase;margin-top:3px}
+
+.nav-section{margin-bottom:1.5rem}
+.nav-label{font-family:var(--fb);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(247,244,239,.3);margin-bottom:.4rem;padding-left:.5rem}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:.6rem .75rem;border-radius:10px;border:none;background:transparent;color:rgba(247,244,239,.5);font-family:var(--ff);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:all .2s}
+.nav-btn:hover{background:rgba(247,244,239,.08);color:rgba(247,244,239,.9)}
+.nav-btn.active{background:rgba(247,244,239,.12);color:#f7f4ef}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-count{margin-left:auto;font-family:var(--fb);font-size:9px;background:rgba(168,216,168,.2);color:#a8d8a8;padding:2px 6px;border-radius:20px}
+
+.sidebar-footer{margin-top:auto;padding-top:1.25rem;border-top:1px solid rgba(247,244,239,.1);font-family:var(--fb);font-size:11px;color:rgba(247,244,239,.3);line-height:1.6}
+.sidebar-footer strong{color:rgba(247,244,239,.6);display:block;margin-bottom:2px}
+
+/* ── MAIN ── */
+.main{overflow-y:auto;height:100vh}
+.panel{display:none;padding:2.5rem;animation:fadeIn .3s ease both}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PANEL HEADER ── */
+.panel-head{margin-bottom:2rem}
+.panel-title{font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-0.04em;line-height:1;margin-bottom:4px}
+.panel-title span{color:var(--green)}
+.panel-sub{font-family:var(--fb);font-size:12px;color:var(--muted)}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
+.card-sm{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem}
+.card-title{font-family:var(--fb);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.gc{display:flex;flex-direction:column;gap:1rem}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem}
+.stat-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;line-height:1;margin-bottom:2px}
+.stat-lbl{font-family:var(--fb);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ── INPUTS ── */
+input,select,textarea{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:.65rem 1rem;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;transition:border-color .2s;width:100%;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+select option{background:#fff}
+label{font-family:var(--fb);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.fg{margin-bottom:.75rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+
+/* ── BUTTONS ── */
+.btn{padding:.7rem 1.25rem;border:none;border-radius:10px;font-family:var(--ff);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:#333;transform:translateY(-1px)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:var(--green-d);transform:translateY(-1px)}
+.btn-sm{padding:.45rem .9rem;font-size:12px;border-radius:8px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+.btn-danger{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-danger:hover{border-color:var(--rose);color:var(--rose)}
+.btn-full{width:100%}
+
+/* ── PROGRESS ── */
+.prog-bar{height:6px;background:var(--s3);border-radius:100px;overflow:hidden;margin:6px 0}
+.prog-fill{height:100%;border-radius:100px;transition:width .5s ease}
+
+/* ── FILTER PILLS ── */
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem}
+.pill{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:var(--s1);font-family:var(--fb);font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;font-weight:500}
+.pill:hover{border-color:var(--ink);color:var(--ink)}
+.pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ── BADGE ── */
+.badge{font-family:var(--fb);font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;display:inline-block}
+.b-green{background:var(--green-l);color:var(--green-d)}
+.b-amber{background:var(--amber-l);color:var(--amber-d)}
+.b-blue{background:var(--blue-l);color:var(--blue-d)}
+.b-rose{background:var(--rose-l);color:var(--rose-d)}
+.b-purple{background:var(--purple-l);color:var(--purple)}
+.b-gray{background:var(--s2);color:var(--muted)}
+
+/* ── BUSINESS DIRECTORY ── */
+.biz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.biz-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:1.25rem;cursor:pointer;transition:all .2s}
+.biz-card:hover{border-color:var(--green);box-shadow:0 4px 20px rgba(0,0,0,.06);transform:translateY(-2px)}
+.biz-icon{width:48px;height:48px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:.9rem}
+.biz-name{font-size:15px;font-weight:700;margin-bottom:3px}
+.biz-cat{font-family:var(--fb);font-size:11px;color:var(--muted);margin-bottom:.75rem}
+.biz-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.stars{color:#d4a843;font-size:12px}
+
+/* ── MARKETPLACE ── */
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.mkt-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .2s;cursor:pointer}
+.mkt-card:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.mkt-thumb{height:140px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative}
+.mkt-price{position:absolute;bottom:8px;right:8px;background:var(--ink);color:var(--paper);font-family:var(--fb);font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px}
+.mkt-info{padding:.9rem}
+.mkt-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.mkt-loc{font-family:var(--fb);font-size:10px;color:var(--muted)}
+
+/* ── JOBS ── */
+.job-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:.75rem;transition:border-color .2s}
+.job-card:hover{border-color:var(--green)}
+.job-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+.job-title{font-size:15px;font-weight:700;margin-bottom:2px}
+.job-company{font-family:var(--fb);font-size:12px;color:var(--muted)}
+.job-meta{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
+.job-actions{display:flex;gap:.5rem}
+
+/* STATUS BADGES */
+.status-pending{background:var(--amber-l);color:var(--amber-d)}
+.status-applied{background:var(--blue-l);color:var(--blue-d)}
+.status-interview{background:var(--green-l);color:var(--green-d)}
+.status-rejected{background:var(--rose-l);color:var(--rose-d)}
+.status-offer{background:var(--purple-l);color:var(--purple)}
+
+/* ── PORTFOLIO ── */
+.port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+.port-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .2s}
+.port-card:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.port-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:3rem}
+.port-info{padding:1rem}
+.port-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.port-desc{font-family:var(--fb);font-size:11px;color:var(--muted);margin-bottom:.75rem;line-height:1.5}
+.port-tags{display:flex;gap:4px;flex-wrap:wrap}
+.port-tag{font-family:var(--fb);font-size:9px;background:var(--s2);color:var(--muted);padding:2px 7px;border-radius:20px}
+
+/* ── DEL ── */
+.del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;padding:4px;border-radius:6px;transition:all .15s;line-height:1}
+.del:hover{color:var(--rose);background:var(--rose-l)}
+
+.divider{height:1px;background:var(--border);margin:1.25rem 0}
+.search-bar{display:flex;gap:.75rem;margin-bottom:1.25rem}
+.search-bar input{flex:1}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);font-family:var(--fb);font-size:12px;padding:.6rem 1.25rem;border-radius:100px;transition:transform .3s;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── HOME ── */
+.hero{background:var(--ink);color:var(--paper);border-radius:20px;padding:2.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(168,216,168,.08)}
+.hero-title{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;letter-spacing:-0.04em;line-height:1;margin-bottom:.5rem}
+.hero-title span{color:#a8d8a8}
+.hero-sub{font-family:var(--fb);font-size:13px;color:rgba(247,244,239,.5);margin-bottom:1.5rem}
+.hero-stats{display:flex;gap:2rem}
+.hero-stat .n{font-size:1.8rem;font-weight:900;color:#a8d8a8}
+.hero-stat .l{font-family:var(--fb);font-size:10px;color:rgba(247,244,239,.4);letter-spacing:.1em;text-transform:uppercase}
+
+/* SAVINGS in community */
+.sav-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:.75rem}
+
+@media(max-width:700px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{position:relative;height:auto;padding:1rem}
+  .main{height:auto}
+  .g2,.g3,.frow,.frow3{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Community<span>Hub</span></div>
+    <div class="logo-sub">Local Platform</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <button class="nav-btn active" onclick="nav('home')"><span class="nav-icon">🏘️</span>Home</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Discover</div>
+    <button class="nav-btn" onclick="nav('directory')"><span class="nav-icon">🗺️</span>Business Directory</button>
+    <button class="nav-btn" onclick="nav('marketplace')"><span class="nav-icon">🛒</span>Marketplace</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Work</div>
+    <button class="nav-btn" onclick="nav('jobs')"><span class="nav-icon">💼</span>Job Board</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Personal</div>
+    <button class="nav-btn" onclick="nav('portfolio')"><span class="nav-icon">🎨</span>My Portfolio</button>
+    <button class="nav-btn" onclick="nav('savings')"><span class="nav-icon">💰</span>Savings Goals</button>
+    <button class="nav-btn" onclick="nav('tips')"><span class="nav-icon">🧾</span>Bill Splitter</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <strong id="sTime"></strong>
+    <span id="sDate"></span><br>
+    Kigali, Rwanda 🇷🇼
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+<!-- ═══════════ HOME ═══════════ -->
+<div class="panel active" id="panel-home">
+  <div class="hero">
+    <div class="hero-title">Your Local<br><span>Community</span> Hub</div>
+    <div class="hero-sub">Businesses · Jobs · Marketplace · Portfolio</div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="n" id="hBiz">0</div><div class="l">Businesses</div></div>
+      <div class="hero-stat"><div class="n" id="hJobs">0</div><div class="l">Job Listings</div></div>
+      <div class="hero-stat"><div class="n" id="hListings">0</div><div class="l">Listings</div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Recent Businesses</div>
+      <div id="hBizList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Jobs</div>
+      <div id="hJobList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Featured Listings</div>
+      <div id="hMktList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Savings Progress</div>
+      <div id="hSavList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DIRECTORY ═══════════ -->
+<div class="panel" id="panel-directory">
+  <div class="panel-head">
+    <div class="panel-title">Business <span>Directory</span></div>
+    <div class="panel-sub">Find local businesses & services</div>
+  </div>
+
+  <div class="search-bar">
+    <input id="bizSearch" type="text" placeholder="Search businesses..." oninput="renderBiz()">
+    <button class="btn btn-primary" onclick="renderBiz()">Search</button>
+  </div>
+
+  <div class="pills" id="bizCatPills">
+    <button class="pill on" onclick="setBizCat('all',this)">All</button>
+    <button class="pill" onclick="setBizCat('food',this)">🍽️ Food</button>
+    <button class="pill" onclick="setBizCat('tech',this)">💻 Tech</button>
+    <button class="pill" onclick="setBizCat('health',this)">💊 Health</button>
+    <button class="pill" onclick="setBizCat('education',this)">📚 Education</button>
+    <button class="pill" onclick="setBizCat('transport',this)">🚗 Transport</button>
+    <button class="pill" onclick="setBizCat('finance',this)">🏦 Finance</button>
+    <button class="pill" onclick="setBizCat('retail',this)">🛍️ Retail</button>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div class="card-title" style="margin:0" id="bizCount">0 businesses</div>
+    <button class="btn btn-green btn-sm" onclick="showBizForm()">+ Add Business</button>
+  </div>
+
+  <div id="bizForm" class="card" style="display:none;margin-bottom:1rem">
+    <div class="card-title">Add a Business</div>
+    <div class="frow">
+      <div class="fg"><label>Business Name</label><input id="bfName" type="text" placeholder="e.g. Kigali Coffee Co."></div>
+      <div class="fg"><label>Category</label>
+        <select id="bfCat"><option value="food">🍽️ Food & Restaurant</option><option value="tech">💻 Tech & Digital</option><option value="health">💊 Health & Wellness</option><option value="education">📚 Education</option><option value="transport">🚗 Transport</option><option value="finance">🏦 Finance</option><option value="retail">🛍️ Retail</option><option value="other">📌 Other</option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Location</label><input id="bfLoc" type="text" placeholder="e.g. Kimironko, Kigali"></div>
+      <div class="fg"><label>Phone</label><input id="bfPhone" type="text" placeholder="+250 7xx xxx xxx"></div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="bfDesc" rows="2" placeholder="What does this business offer?"></textarea></div>
+    <div class="frow">
+      <button class="btn btn-primary btn-full" onclick="addBiz()">Add Business</button>
+      <button class="btn btn-ghost btn-full" onclick="document.getElementById('bizForm').style.display='none'">Cancel</button>
+    </div>
+  </div>
+
+  <div class="biz-grid" id="bizGrid"></div>
+</div>
+
+<!-- ═══════════ MARKETPLACE ═══════════ -->
+<div class="panel" id="panel-marketplace">
+  <div class="panel-head">
+    <div class="panel-title">Community <span>Marketplace</span></div>
+    <div class="panel-sub">Buy, sell & trade locally</div>
+  </div>
+
+  <div class="search-bar">
+    <input id="mktSearch" type="text" placeholder="Search listings..." oninput="renderMkt()">
+    <button class="btn btn-primary" onclick="renderMkt()">Search</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <div class="pills" style="margin:0">
+      <button class="pill on" onclick="setMktCat('all',this)">All</button>
+      <button class="pill" onclick="setMktCat('electronics',this)">📱 Electronics</button>
+      <button class="pill" onclick="setMktCat('clothing',this)">👗 Clothing</button>
+      <button class="pill" onclick="setMktCat('furniture',this)">🛋️ Furniture</button>
+      <button class="pill" onclick="setMktCat('food',this)">🥑 Food</button>
+      <button class="pill" onclick="setMktCat('services',this)">🔧 Services</button>
+    </div>
+    <select id="mktSort" onchange="renderMkt()" style="width:auto;flex-shrink:0;font-size:12px;padding:.4rem .75rem">
+      <option value="newest">Newest first</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+    </select>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div class="card-title" style="margin:0" id="mktCount">0 listings</div>
+    <button class="btn btn-green btn-sm" onclick="showMktForm()">+ Add Listing</button>
+  </div>
+
+  <div id="mktForm" class="card" style="display:none;margin-bottom:1rem">
+    <div class="card-title">Add Listing</div>
+    <div class="frow">
+      <div class="fg"><label>Title</label><input id="mfTitle" type="text" placeholder="e.g. iPhone 13 Pro - Like New"></div>
+      <div class="fg"><label>Price (RWF)</label><input id="mfPrice" type="number" placeholder="50000"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Category</label>
+        <select id="mfCat"><option value="electronics">📱 Electronics</option><option value="clothing">👗 Clothing</option><option value="furniture">🛋️ Furniture</option><option value="food">🥑 Food</option><option value="services">🔧 Services</option><option value="other">📌 Other</option></select>
+      </div>
+      <div class="fg"><label>Location</label><input id="mfLoc" type="text" placeholder="e.g. Nyarugenge"></div>
+    </div>
+    <div class="fg"><label>Emoji Icon</label><input id="mfEmoji" type="text" placeholder="📱" maxlength="2"></div>
+    <div class="frow">
+      <button class="btn btn-primary btn-full" onclick="addListing()">Post Listing</button>
+      <button class="btn btn-ghost btn-full" onclick="document.getElementById('mktForm').style.display='none'">Cancel</button>
+    </div>
+  </div>
+
+  <div class="mkt-grid" id="mktGrid"></div>
+</div>
+
+<!-- ═══════════ JOBS ═══════════ -->
+<div class="panel" id="panel-jobs">
+  <div class="panel-head">
+    <div class="panel-title">Job <span>Board</span></div>
+    <div class="panel-sub">Find opportunities & track applications</div>
+  </div>
+
+  <div class="stat-row" style="grid-template-columns:repeat(5,1fr)">
+    <div class="stat-card"><div class="stat-num" id="jTotal" style="color:var(--ink)">0</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card"><div class="stat-num" id="jApplied" style="color:var(--blue)">0</div><div class="stat-lbl">Applied</div></div>
+    <div class="stat-card"><div class="stat-num" id="jInterview" style="color:var(--green)">0</div><div class="stat-lbl">Interview</div></div>
+    <div class="stat-card"><div class="stat-num" id="jOffer" style="color:var(--amber)">0</div><div class="stat-lbl">Offer</div></div>
+    <div class="stat-card"><div class="stat-num" id="jReject" style="color:var(--rose)">0</div><div class="stat-lbl">Rejected</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Add Job / Application</div>
+      <div class="fg"><label>Job Title</label><input id="jTitle" type="text" placeholder="e.g. Frontend Developer"></div>
+      <div class="fg"><label>Company</label><input id="jCompany" type="text" placeholder="e.g. MTN Rwanda"></div>
+      <div class="frow">
+        <div class="fg"><label>Location</label><input id="jLoc" type="text" placeholder="Kigali / Remote"></div>
+        <div class="fg"><label>Type</label>
+          <select id="jType"><option value="full-time">Full-time</option><option value="part-time">Part-time</option><option value="contract">Contract</option><option value="internship">Internship</option><option value="freelance">Freelance</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Salary (RWF)</label><input id="jSalary" type="text" placeholder="e.g. 500,000/mo"></div>
+        <div class="fg"><label>Status</label>
+          <select id="jStatus"><option value="pending">📋 To Apply</option><option value="applied">📤 Applied</option><option value="interview">💬 Interview</option><option value="offer">🎉 Offer</option><option value="rejected">❌ Rejected</option></select>
+        </div>
+      </div>
+      <div class="fg"><label>Notes</label><textarea id="jNotes" rows="2" placeholder="Deadline, referral, requirements..."></textarea></div>
+      <button class="btn btn-primary btn-full" onclick="addJob()">Save Job</button>
+    </div>
+
+    <div class="card" style="max-height:600px;overflow-y:auto">
+      <div class="pills">
+        <button class="pill on" onclick="setJFilter('all',this)">All</button>
+        <button class="pill" onclick="setJFilter('pending',this)">To Apply</button>
+        <button class="pill" onclick="setJFilter('applied',this)">Applied</button>
+        <button class="pill" onclick="setJFilter('interview',this)">Interview</button>
+        <button class="pill" onclick="setJFilter('offer',this)">Offer</button>
+      </div>
+      <div id="jobList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PORTFOLIO ═══════════ -->
+<div class="panel" id="panel-portfolio">
+  <div class="panel-head">
+    <div class="panel-title">My <span>Portfolio</span></div>
+    <div class="panel-sub">Showcase your work to the community</div>
+  </div>
+
+  <!-- Profile card -->
+  <div class="card" style="margin-bottom:1.25rem" id="portProfile">
+    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+      <div style="width:70px;height:70px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0" id="portAvatar">👨‍💻</div>
+      <div style="flex:1">
+        <div style="font-size:1.5rem;font-weight:900;margin-bottom:2px" id="portName">Your Name</div>
+        <div style="font-family:var(--fb);font-size:13px;color:var(--muted);margin-bottom:.5rem" id="portRole">Frontend Developer</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap" id="portSkillBadges"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="togglePortEdit()">Edit Profile</button>
+    </div>
+  </div>
+
+  <div id="portEditForm" class="card" style="display:none;margin-bottom:1.25rem">
+    <div class="card-title">Edit Profile</div>
+    <div class="frow">
+      <div class="fg"><label>Your Name</label><input id="pfName" type="text" placeholder="Full Name"></div>
+      <div class="fg"><label>Role / Title</label><input id="pfRole" type="text" placeholder="Frontend Developer"></div>
+    </div>
+    <div class="fg"><label>Skills (comma separated)</label><input id="pfSkills" type="text" placeholder="HTML, CSS, JavaScript, React"></div>
+    <div class="fg"><label>Avatar Emoji</label><input id="pfAvatar" type="text" placeholder="👨‍💻" maxlength="2"></div>
+    <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div class="pills" id="portFilterPills">
+      <button class="pill on" onclick="setPortFilter('all',this)">All</button>
+      <button class="pill" onclick="setPortFilter('web',this)">🌐 Web</button>
+      <button class="pill" onclick="setPortFilter('mobile',this)">📱 Mobile</button>
+      <button class="pill" onclick="setPortFilter('design',this)">🎨 Design</button>
+      <button class="pill" onclick="setPortFilter('backend',this)">⚙️ Backend</button>
+    </div>
+    <button class="btn btn-green btn-sm" onclick="showPortForm()">+ Add Project</button>
+  </div>
+
+  <div id="portForm" class="card" style="display:none;margin-bottom:1rem">
+    <div class="card-title">Add Project</div>
+    <div class="frow">
+      <div class="fg"><label>Project Name</label><input id="ppName" type="text" placeholder="e.g. LifeOS Dashboard"></div>
+      <div class="fg"><label>Category</label>
+        <select id="ppCat"><option value="web">🌐 Web</option><option value="mobile">📱 Mobile</option><option value="design">🎨 Design</option><option value="backend">⚙️ Backend</option><option value="other">📌 Other</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="ppDesc" rows="2" placeholder="What does this project do?"></textarea></div>
+    <div class="frow">
+      <div class="fg"><label>Tech Stack (comma separated)</label><input id="ppStack" type="text" placeholder="HTML, CSS, JavaScript"></div>
+      <div class="fg"><label>Emoji</label><input id="ppEmoji" type="text" placeholder="🌐" maxlength="2"></div>
+    </div>
+    <div class="frow">
+      <button class="btn btn-primary btn-full" onclick="addProject()">Add Project</button>
+      <button class="btn btn-ghost btn-full" onclick="document.getElementById('portForm').style.display='none'">Cancel</button>
+    </div>
+  </div>
+
+  <div class="port-grid" id="portGrid"></div>
+</div>
+
+<!-- ═══════════ SAVINGS ═══════════ -->
+<div class="panel" id="panel-savings">
+  <div class="panel-head">
+    <div class="panel-title">Savings <span>Goals</span></div>
+    <div class="panel-sub">Track your financial targets</div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">New Goal</div>
+      <div class="fg"><label>Goal Name</label><input id="sgName" type="text" placeholder="e.g. Laptop Fund"></div>
+      <div class="frow">
+        <div class="fg"><label>Target (RWF)</label><input id="sgTarget" type="number" placeholder="500000"></div>
+        <div class="fg"><label>Icon</label><input id="sgEmoji" type="text" placeholder="💻" maxlength="2"></div>
+      </div>
+      <div class="fg"><label>Deadline (optional)</label><input id="sgDeadline" type="date"></div>
+      <button class="btn btn-primary btn-full" onclick="addSGoal()">Create Goal</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Make a Deposit</div>
+      <div class="fg"><label>Select Goal</label><select id="sgSelect"></select></div>
+      <div class="fg"><label>Amount (RWF)</label><input id="sgDeposit" type="number" placeholder="10000"></div>
+      <button class="btn btn-primary btn-full" onclick="depositSGoal()">Deposit</button>
+    </div>
+  </div>
+  <div style="margin-top:1rem" id="sgList"></div>
+</div>
+
+<!-- ═══════════ TIP / BILL SPLITTER ═══════════ -->
+<div class="panel" id="panel-tips">
+  <div class="panel-head">
+    <div class="panel-title">Bill <span>Splitter</span></div>
+    <div class="panel-sub">Split bills & calculate tips fairly</div>
+  </div>
+
+  <div style="max-width:580px">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">Bill Details</div>
+      <div class="frow3">
+        <div class="fg"><label>Bill Total (RWF)</label><input id="billAmt" type="number" placeholder="25000" oninput="calcSplit()"></div>
+        <div class="fg"><label>Tip %</label><input id="billTip" type="number" placeholder="10" value="10" oninput="calcSplit()"></div>
+        <div class="fg"><label>Number of People</label><input id="billPeople" type="number" placeholder="4" value="2" min="1" oninput="calcSplit()"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="setTip(0)">No tip</button>
+        <button class="btn btn-ghost btn-sm" onclick="setTip(5)">5%</button>
+        <button class="btn btn-ghost btn-sm" onclick="setTip(10)">10%</button>
+        <button class="btn btn-ghost btn-sm" onclick="setTip(15)">15%</button>
+        <button class="btn btn-ghost btn-sm" onclick="setTip(20)">20%</button>
+      </div>
+    </div>
+
+    <div class="card" id="splitResult" style="display:none">
+      <div class="g2" style="gap:.75rem;margin-bottom:1rem">
+        <div style="background:var(--s2);border-radius:12px;padding:1.1rem;text-align:center">
+          <div style="font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:var(--green)" id="rPerPerson">RWF 0</div>
+          <div style="font-family:var(--fb);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px">Per Person</div>
+        </div>
+        <div style="background:var(--s2);border-radius:12px;padding:1.1rem;text-align:center">
+          <div style="font-size:1.8rem;font-weight:900;letter-spacing:-0.03em" id="rTotal">RWF 0</div>
+          <div style="font-family:var(--fb);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px">Total with Tip</div>
+        </div>
+      </div>
+      <div style="font-family:var(--fb);font-size:12px;color:var(--muted)" id="rBreakdown"></div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Split History</div>
+      <div id="splitHistory"><div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No saved splits yet</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="saveSplit()">💾 Save This Split</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CLOCK ──
+function updateClock(){
+  const n=new Date();
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('sTime').textContent=n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sDate').textContent=DAYS[n.getDay()]+', '+n.getDate()+' '+MONTHS[n.getMonth()];
+}
+updateClock();setInterval(updateClock,1000);
+
+// ── NAV ──
+function nav(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(id==='home')refreshHome();
+}
+
+// ── TOAST ──
+let tt;
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmtRWF(n){return'RWF '+Number(n).toLocaleString('en-US',{maximumFractionDigits:0})}
+
+// ════════════════════════════════
+// BUSINESS DIRECTORY
+// ════════════════════════════════
+const CAT_META={
+  food:{emoji:'🍽️',color:'var(--amber)'},tech:{emoji:'💻',color:'var(--blue)'},
+  health:{emoji:'💊',color:'var(--green)'},education:{emoji:'📚',color:'var(--purple)'},
+  transport:{emoji:'🚗',color:'var(--muted)'},finance:{emoji:'🏦',color:'var(--green)'},
+  retail:{emoji:'🛍️',color:'var(--rose)'},other:{emoji:'📌',color:'var(--muted)'}
+};
+
+let businesses=JSON.parse(localStorage.getItem('ch_biz')||'null')||[
+  {id:1,name:'Kigali Coffee House',category:'food',location:'Kimironko, Kigali',phone:'+250 788 000 001',desc:'Specialty coffee, pastries & coworking space. Open 7am–9pm.',rating:4.8,reviews:120},
+  {id:2,name:'TechHub Rwanda',category:'tech',location:'Kacyiru, Kigali',phone:'+250 788 000 002',desc:'IT services, web development, hardware repair & tech training.',rating:4.6,reviews:85},
+  {id:3,name:'Heal Well Clinic',category:'health',location:'Remera, Kigali',phone:'+250 788 000 003',desc:'General medicine, lab tests and specialist consultations.',rating:4.7,reviews:200},
+  {id:4,name:'BrightMinds Academy',category:'education',location:'Gisozi, Kigali',phone:'+250 788 000 004',desc:'After-school tutoring for primary through university students.',rating:4.9,reviews:65},
+  {id:5,name:'Swift Movers',category:'transport',location:'Nyabugogo, Kigali',phone:'+250 788 000 005',desc:'Local and upcountry cargo and furniture transportation.',rating:4.4,reviews:40},
+  {id:6,name:'Equity Bank Rwanda',category:'finance',location:'CBD, Kigali',phone:'+250 788 000 006',desc:'Savings, loans, mobile banking & business finance solutions.',rating:4.5,reviews:310},
+];
+
+let bizCat='all';
+function setBizCat(c,btn){bizCat=c;document.querySelectorAll('#panel-directory .pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderBiz();}
+function showBizForm(){document.getElementById('bizForm').style.display=document.getElementById('bizForm').style.display==='none'?'block':'none';}
+function addBiz(){
+  const name=document.getElementById('bfName').value.trim();
+  if(!name){toast('Enter business name');return;}
+  businesses.push({id:Date.now(),name,category:document.getElementById('bfCat').value,location:document.getElementById('bfLoc').value||'Kigali',phone:document.getElementById('bfPhone').value||'',desc:document.getElementById('bfDesc').value||'',rating:5.0,reviews:0});
+  localStorage.setItem('ch_biz',JSON.stringify(businesses));
+  ['bfName','bfLoc','bfPhone','bfDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bizForm').style.display='none';
+  renderBiz();toast('Business added!');
+}
+function deleteBiz(id){businesses=businesses.filter(b=>b.id!==id);localStorage.setItem('ch_biz',JSON.stringify(businesses));renderBiz();}
+function renderBiz(){
+  const q=document.getElementById('bizSearch').value.toLowerCase();
+  let list=businesses;
+  if(bizCat!=='all')list=list.filter(b=>b.category===bizCat);
+  if(q)list=list.filter(b=>b.name.toLowerCase().includes(q)||b.desc.toLowerCase().includes(q)||b.location.toLowerCase().includes(q));
+  document.getElementById('bizCount').textContent=`${list.length} business${list.length!==1?'es':''}`;
+  const grid=document.getElementById('bizGrid');
+  if(!list.length){grid.innerHTML='<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:2rem;text-align:center;grid-column:1/-1">No businesses found. Try a different filter.</div>';return;}
+  grid.innerHTML=list.map(b=>{
+    const meta=CAT_META[b.category]||CAT_META.other;
+    const stars='★'.repeat(Math.round(b.rating))+'☆'.repeat(5-Math.round(b.rating));
+    return`<div class="biz-card">
+      <div class="biz-icon">${meta.emoji}</div>
+      <div class="biz-name">${esc(b.name)}</div>
+      <div class="biz-cat">${b.category} · ${esc(b.location)}</div>
+      <p style="font-family:var(--fb);font-size:11px;color:var(--muted);margin-bottom:.75rem;line-height:1.5">${esc(b.desc)}</p>
+      <div class="biz-meta">
+        <span class="stars">${stars}</span>
+        <span style="font-family:var(--fb);font-size:10px;color:var(--muted)">${b.rating} (${b.reviews})</span>
+        ${b.phone?`<a href="tel:${b.phone}" style="font-family:var(--fb);font-size:10px;color:var(--blue);margin-left:auto">${esc(b.phone)}</a>`:''}
+      </div>
+      <button class="del" style="position:absolute;top:10px;right:10px" onclick="deleteBiz(${b.id})">✕</button>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.biz-card').forEach(c=>c.style.position='relative');
+}
+renderBiz();
+
+// ════════════════════════════════
+// MARKETPLACE
+// ════════════════════════════════
+let listings=JSON.parse(localStorage.getItem('ch_mkt')||'null')||[
+  {id:1,title:'iPhone 13 Pro — 256GB',category:'electronics',price:750000,location:'Remera',emoji:'📱',ts:Date.now()-3600000},
+  {id:2,title:'Handmade Agaseke Basket',category:'clothing',price:15000,location:'Nyarugenge',emoji:'🧺',ts:Date.now()-7200000},
+  {id:3,title:'Office Desk — Solid Wood',category:'furniture',price:120000,location:'Kicukiro',emoji:'🖥️',ts:Date.now()-10800000},
+  {id:4,title:'Fresh Organic Avocados (1kg)',category:'food',price:2500,location:'Kimironko Market',emoji:'🥑',ts:Date.now()-14400000},
+  {id:5,title:'Graphic Design Services',category:'services',price:50000,location:'Remote',emoji:'🎨',ts:Date.now()-18000000},
+  {id:6,title:'Samsung Galaxy A54',category:'electronics',price:420000,location:'CBD, Kigali',emoji:'📱',ts:Date.now()-21600000},
+];
+let mktCat='all';
+function setMktCat(c,btn){mktCat=c;document.querySelectorAll('#panel-marketplace .pills .pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderMkt();}
+function showMktForm(){document.getElementById('mktForm').style.display=document.getElementById('mktForm').style.display==='none'?'block':'none';}
+function addListing(){
+  const title=document.getElementById('mfTitle').value.trim();
+  const price=parseFloat(document.getElementById('mfPrice').value);
+  if(!title){toast('Enter a title');return;}
+  if(!price||price<0){toast('Enter a valid price');return;}
+  listings.unshift({id:Date.now(),title,category:document.getElementById('mfCat').value,price,location:document.getElementById('mfLoc').value||'Kigali',emoji:document.getElementById('mfEmoji').value||'📦',ts:Date.now()});
+  localStorage.setItem('ch_mkt',JSON.stringify(listings));
+  ['mfTitle','mfPrice','mfLoc','mfEmoji'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mktForm').style.display='none';
+  renderMkt();toast('Listing posted!');
+}
+function deleteListing(id){listings=listings.filter(l=>l.id!==id);localStorage.setItem('ch_mkt',JSON.stringify(listings));renderMkt();}
+function renderMkt(){
+  const q=document.getElementById('mktSearch').value.toLowerCase();
+  const sort=document.getElementById('mktSort').value;
+  let list=[...listings];
+  if(mktCat!=='all')list=list.filter(l=>l.category===mktCat);
+  if(q)list=list.filter(l=>l.title.toLowerCase().includes(q)||l.location.toLowerCase().includes(q));
+  if(sort==='price-asc')list.sort((a,b)=>a.price-b.price);
+  if(sort==='price-desc')list.sort((a,b)=>b.price-a.price);
+  if(sort==='newest')list.sort((a,b)=>b.ts-a.ts);
+  document.getElementById('mktCount').textContent=`${list.length} listing${list.length!==1?'s':''}`;
+  const grid=document.getElementById('mktGrid');
+  if(!list.length){grid.innerHTML='<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:2rem;text-align:center;grid-column:1/-1">No listings found.</div>';return;}
+  grid.innerHTML=list.map(l=>`
+    <div class="mkt-card" style="position:relative">
+      <div class="mkt-thumb">${l.emoji}<span class="mkt-price">${fmtRWF(l.price)}</span></div>
+      <div class="mkt-info">
+        <div class="mkt-name">${esc(l.title)}</div>
+        <div class="mkt-loc">📍 ${esc(l.location)} · ${l.category}</div>
+        <div style="margin-top:.5rem;display:flex;justify-content:space-between;align-items:center">
+          <button class="btn btn-sm btn-green" style="font-size:10px;padding:4px 10px">Contact</button>
+          <button class="del" onclick="deleteListing(${l.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+renderMkt();
+
+// ════════════════════════════════
+// JOBS
+// ════════════════════════════════
+let jobs=JSON.parse(localStorage.getItem('ch_jobs')||'null')||[
+  {id:1,title:'Frontend Developer',company:'Andela Rwanda',location:'Kigali / Remote',type:'full-time',salary:'700,000/mo',status:'interview',notes:'Portfolio review stage',ts:Date.now()-86400000},
+  {id:2,title:'UI/UX Designer',company:'Irembo',location:'Kigali',type:'full-time',salary:'600,000/mo',status:'applied',notes:'Applied via website',ts:Date.now()-172800000},
+  {id:3,title:'JavaScript Tutor',company:'Self',location:'Remote',type:'freelance',salary:'50,000/session',status:'offer',notes:'Starting next month',ts:Date.now()-259200000},
+];
+let jFilter='all';
+function addJob(){
+  const title=document.getElementById('jTitle').value.trim();
+  const company=document.getElementById('jCompany').value.trim();
+  if(!title||!company){toast('Enter job title and company');return;}
+  jobs.unshift({id:Date.now(),title,company,location:document.getElementById('jLoc').value||'Kigali',type:document.getElementById('jType').value,salary:document.getElementById('jSalary').value||'',status:document.getElementById('jStatus').value,notes:document.getElementById('jNotes').value||'',ts:Date.now()});
+  localStorage.setItem('ch_jobs',JSON.stringify(jobs));
+  ['jTitle','jCompany','jLoc','jSalary','jNotes'].forEach(id=>document.getElementById(id).value='');
+  renderJobs();toast('Job saved!');
+}
+function deleteJob(id){jobs=jobs.filter(j=>j.id!==id);localStorage.setItem('ch_jobs',JSON.stringify(jobs));renderJobs();}
+function updateJobStatus(id,status){
+  const j=jobs.find(j=>j.id===id);if(j)j.status=status;
+  localStorage.setItem('ch_jobs',JSON.stringify(jobs));renderJobs();toast('Status updated');
+}
+function setJFilter(f,btn){jFilter=f;document.querySelectorAll('#panel-jobs .pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderJobs();}
+function renderJobs(){
+  const counts={total:jobs.length,applied:0,interview:0,offer:0,rejected:0};
+  jobs.forEach(j=>{if(counts[j.status]!==undefined)counts[j.status]++;});
+  ['Total','Applied','Interview','Offer','Reject'].forEach(k=>document.getElementById('j'+k).textContent=counts[k.toLowerCase()]||counts.total||0);
+  document.getElementById('jTotal').textContent=counts.total;
+  document.getElementById('jApplied').textContent=counts.applied;
+  document.getElementById('jInterview').textContent=counts.interview;
+  document.getElementById('jOffer').textContent=counts.offer;
+  document.getElementById('jReject').textContent=counts.rejected;
+  let list=jFilter==='all'?jobs:jobs.filter(j=>j.status===jFilter);
+  const el=document.getElementById('jobList');
+  if(!list.length){el.innerHTML='<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:2rem;text-align:center">No jobs in this category</div>';return;}
+  el.innerHTML=list.map(j=>`
+    <div class="job-card">
+      <div class="job-header">
+        <div><div class="job-title">${esc(j.title)}</div><div class="job-company">${esc(j.company)}</div></div>
+        <button class="del" onclick="deleteJob(${j.id})">✕</button>
+      </div>
+      <div class="job-meta">
+        <span class="badge b-gray">📍 ${esc(j.location)}</span>
+        <span class="badge b-gray">${j.type}</span>
+        ${j.salary?`<span class="badge b-green">💰 ${esc(j.salary)}</span>`:''}
+        <span class="badge status-${j.status}">${j.status.toUpperCase()}</span>
+      </div>
+      ${j.notes?`<div style="font-family:var(--fb);font-size:11px;color:var(--muted);margin-bottom:.75rem">${esc(j.notes)}</div>`:''}
+      <div class="job-actions">
+        <select style="font-size:11px;padding:4px 8px;width:auto" onchange="updateJobStatus(${j.id},this.value)">
+          <option value="pending" ${j.status==='pending'?'selected':''}>To Apply</option>
+          <option value="applied" ${j.status==='applied'?'selected':''}>Applied</option>
+          <option value="interview" ${j.status==='interview'?'selected':''}>Interview</option>
+          <option value="offer" ${j.status==='offer'?'selected':''}>Offer</option>
+          <option value="rejected" ${j.status==='rejected'?'selected':''}>Rejected</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+renderJobs();
+
+// ════════════════════════════════
+// PORTFOLIO
+// ════════════════════════════════
+let profile=JSON.parse(localStorage.getItem('ch_profile')||'null')||{name:'Your Name',role:'Frontend Developer',skills:['HTML','CSS','JavaScript'],avatar:'👨‍💻'};
+let projects=JSON.parse(localStorage.getItem('ch_projects')||'null')||[
+  {id:1,name:'Expense Tracker',category:'web',desc:'Full-featured expense and income tracker with localStorage persistence.',stack:['HTML','CSS','JS'],emoji:'💰'},
+  {id:2,name:'Habit Tracker',category:'web',desc:'Daily habit tracking app with streak counter and reflection notes.',stack:['HTML','CSS','JS'],emoji:'🕌'},
+  {id:3,name:'Currency Converter',category:'web',desc:'Live exchange rate app using open.er-api.com with 24 currencies.',stack:['HTML','CSS','JS','Fetch API'],emoji:'💱'},
+  {id:4,name:'To-Do App',category:'web',desc:'Full CRUD task manager with priorities, categories and drag & drop.',stack:['HTML','CSS','JS'],emoji:'✅'},
+];
+let portFilter='all';
+
+function togglePortEdit(){
+  const f=document.getElementById('portEditForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block'){
+    document.getElementById('pfName').value=profile.name;
+    document.getElementById('pfRole').value=profile.role;
+    document.getElementById('pfSkills').value=profile.skills.join(', ');
+    document.getElementById('pfAvatar').value=profile.avatar;
+  }
+}
+function saveProfile(){
+  profile.name=document.getElementById('pfName').value||'Your Name';
+  profile.role=document.getElementById('pfRole').value||'Developer';
+  profile.skills=document.getElementById('pfSkills').value.split(',').map(s=>s.trim()).filter(Boolean);
+  profile.avatar=document.getElementById('pfAvatar').value||'👨‍💻';
+  localStorage.setItem('ch_profile',JSON.stringify(profile));
+  document.getElementById('portEditForm').style.display='none';
+  renderProfile();toast('Profile saved!');
+}
+function renderProfile(){
+  document.getElementById('portName').textContent=profile.name;
+  document.getElementById('portRole').textContent=profile.role;
+  document.getElementById('portAvatar').textContent=profile.avatar;
+  document.getElementById('portSkillBadges').innerHTML=profile.skills.slice(0,6).map(s=>`<span class="badge b-gray">${esc(s)}</span>`).join('');
+}
+function showPortForm(){document.getElementById('portForm').style.display=document.getElementById('portForm').style.display==='none'?'block':'none';}
+function addProject(){
+  const name=document.getElementById('ppName').value.trim();
+  if(!name){toast('Enter project name');return;}
+  projects.unshift({id:Date.now(),name,category:document.getElementById('ppCat').value,desc:document.getElementById('ppDesc').value||'',stack:document.getElementById('ppStack').value.split(',').map(s=>s.trim()).filter(Boolean),emoji:document.getElementById('ppEmoji').value||'🌐'});
+  localStorage.setItem('ch_projects',JSON.stringify(projects));
+  ['ppName','ppDesc','ppStack','ppEmoji'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('portForm').style.display='none';
+  renderProjects();toast('Project added!');
+}
+function deleteProject(id){projects=projects.filter(p=>p.id!==id);localStorage.setItem('ch_projects',JSON.stringify(projects));renderProjects();}
+function setPortFilter(f,btn){portFilter=f;document.querySelectorAll('#portFilterPills .pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderProjects();}
+const PORT_BG={web:'#e8f4ff',mobile:'#e8f8ee',design:'#fff0e8',backend:'#f0e8ff',other:'#f0ece4'};
+function renderProjects(){
+  renderProfile();
+  const list=portFilter==='all'?projects:projects.filter(p=>p.category===portFilter);
+  const grid=document.getElementById('portGrid');
+  if(!list.length){grid.innerHTML='<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:2rem;text-align:center;grid-column:1/-1">No projects yet. Add your first one!</div>';return;}
+  grid.innerHTML=list.map(p=>`
+    <div class="port-card" style="position:relative">
+      <div class="port-thumb" style="background:${PORT_BG[p.category]||PORT_BG.other}">${p.emoji}</div>
+      <div class="port-info">
+        <div class="port-title">${esc(p.name)}</div>
+        <div class="port-desc">${esc(p.desc)}</div>
+        <div class="port-tags">${p.stack.map(t=>`<span class="port-tag">${esc(t)}</span>`).join('')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem">
+          <span class="badge b-blue">${p.category}</span>
+          <button class="del" onclick="deleteProject(${p.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+renderProjects();
+
+// ════════════════════════════════
+// SAVINGS GOALS
+// ════════════════════════════════
+let sGoals=JSON.parse(localStorage.getItem('ch_sgoals')||'[]');
+function addSGoal(){
+  const name=document.getElementById('sgName').value.trim();
+  const target=parseFloat(document.getElementById('sgTarget').value);
+  if(!name){toast('Enter a goal name');return;}
+  if(!target||target<=0){toast('Enter a valid target');return;}
+  sGoals.push({id:Date.now(),name,target,saved:0,emoji:document.getElementById('sgEmoji').value||'🎯',deadline:document.getElementById('sgDeadline').value||''});
+  saveSGoals();renderSGoals();
+  ['sgName','sgTarget','sgEmoji','sgDeadline'].forEach(id=>document.getElementById(id).value='');
+  toast('Goal created!');
+}
+function depositSGoal(){
+  const id=parseInt(document.getElementById('sgSelect').value);
+  const amt=parseFloat(document.getElementById('sgDeposit').value);
+  if(!id){toast('Select a goal');return;}
+  if(!amt||amt<=0){toast('Enter a valid amount');return;}
+  const g=sGoals.find(g=>g.id===id);
+  if(g)g.saved=Math.min(g.saved+amt,g.target);
+  saveSGoals();renderSGoals();toast('Deposit added!');
+}
+function deleteSGoal(id){sGoals=sGoals.filter(g=>g.id!==id);saveSGoals();renderSGoals();}
+function saveSGoals(){localStorage.setItem('ch_sgoals',JSON.stringify(sGoals));}
+function renderSGoals(){
+  const sel=document.getElementById('sgSelect');
+  sel.innerHTML='<option value="">— Select Goal —</option>'+sGoals.map(g=>`<option value="${g.id}">${g.emoji} ${esc(g.name)}</option>`).join('');
+  const el=document.getElementById('sgList');
+  if(!sGoals.length){el.innerHTML='<div class="card" style="text-align:center;font-family:var(--fb);font-size:12px;color:var(--muted);padding:2rem">No goals yet. Create your first!</div>';return;}
+  el.innerHTML=sGoals.map(g=>{
+    const pct=Math.round(g.saved/g.target*100);
+    const daysLeft=g.deadline?Math.ceil((new Date(g.deadline)-new Date())/86400000):null;
+    return`<div class="sav-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div style="font-size:2rem">${g.emoji}</div>
+          <div>
+            <div style="font-weight:700">${esc(g.name)}</div>
+            <div style="font-family:var(--fb);font-size:11px;color:var(--muted)">${fmtRWF(g.saved)} saved of ${fmtRWF(g.target)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          ${daysLeft!==null?`<span class="badge ${daysLeft<7?'b-rose':'b-amber'}">${daysLeft>0?daysLeft+' days left':'Due today'}</span>`:''}
+          <span class="badge ${pct>=100?'b-green':'b-gray'}">${pct}%</span>
+          <button class="del" onclick="deleteSGoal(${g.id})">✕</button>
+        </div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':'var(--amber)'}"></div></div>
+    </div>`;
+  }).join('');
+}
+renderSGoals();
+
+// ════════════════════════════════
+// BILL SPLITTER
+// ════════════════════════════════
+let splitHistory=JSON.parse(localStorage.getItem('ch_splits')||'[]');
+function setTip(val){document.getElementById('billTip').value=val;calcSplit();}
+function calcSplit(){
+  const bill=parseFloat(document.getElementById('billAmt').value)||0;
+  const tip=parseFloat(document.getElementById('billTip').value)||0;
+  const people=parseInt(document.getElementById('billPeople').value)||1;
+  if(bill<=0){document.getElementById('splitResult').style.display='none';return;}
+  const tipAmt=bill*(tip/100);
+  const total=bill+tipAmt;
+  const perPerson=total/people;
+  document.getElementById('splitResult').style.display='block';
+  document.getElementById('rPerPerson').textContent=fmtRWF(Math.round(perPerson));
+  document.getElementById('rTotal').textContent=fmtRWF(Math.round(total));
+  document.getElementById('rBreakdown').innerHTML=`Bill: ${fmtRWF(bill)} &nbsp;+&nbsp; Tip (${tip}%): ${fmtRWF(Math.round(tipAmt))} &nbsp;=&nbsp; Total: ${fmtRWF(Math.round(total))} &nbsp;÷&nbsp; ${people} people &nbsp;= &nbsp;<strong style="color:var(--green)">${fmtRWF(Math.round(perPerson))} each</strong>`;
+}
+function saveSplit(){
+  const bill=parseFloat(document.getElementById('billAmt').value)||0;
+  if(!bill){toast('Enter a bill amount first');return;}
+  const tip=parseFloat(document.getElementById('billTip').value)||0;
+  const people=parseInt(document.getElementById('billPeople').value)||1;
+  const total=bill*(1+tip/100);
+  splitHistory.unshift({id:Date.now(),bill,tip,people,total:Math.round(total),perPerson:Math.round(total/people),date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})});
+  splitHistory=splitHistory.slice(0,10);
+  localStorage.setItem('ch_splits',JSON.stringify(splitHistory));
+  renderSplitHistory();toast('Split saved!');
+}
+function renderSplitHistory(){
+  const el=document.getElementById('splitHistory');
+  if(!splitHistory.length){el.innerHTML='<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No saved splits yet</div>';return;}
+  el.innerHTML=splitHistory.map(s=>`
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-family:var(--fb);font-size:11px;color:var(--muted)">${s.date} · ${s.people} people · ${s.tip}% tip</div>
+      <div style="font-weight:700;font-size:13px">${fmtRWF(s.perPerson)}<span style="font-family:var(--fb);font-size:10px;color:var(--muted)">/person</span></div>
+    </div>`).join('');
+}
+renderSplitHistory();
+
+// ════════════════════════════════
+// HOME REFRESH
+// ════════════════════════════════
+function refreshHome(){
+  document.getElementById('hBiz').textContent=businesses.length;
+  document.getElementById('hJobs').textContent=jobs.length;
+  document.getElementById('hListings').textContent=listings.length;
+  const bl=document.getElementById('hBizList');
+  bl.innerHTML=businesses.slice(0,3).map(b=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:18px">${(CAT_META[b.category]||CAT_META.other).emoji}</span>
+    <div style="flex:1"><div style="font-weight:700;font-size:13px">${esc(b.name)}</div><div style="font-family:var(--fb);font-size:10px;color:var(--muted)">${esc(b.location)}</div></div>
+    <span class="badge b-gray">${b.category}</span>
+  </div>`).join('')||'<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No businesses yet</div>';
+  const jl=document.getElementById('hJobList');
+  jl.innerHTML=jobs.slice(0,3).map(j=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+    <div style="flex:1"><div style="font-weight:700;font-size:13px">${esc(j.title)}</div><div style="font-family:var(--fb);font-size:10px;color:var(--muted)">${esc(j.company)}</div></div>
+    <span class="badge status-${j.status}">${j.status}</span>
+  </div>`).join('')||'<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No jobs yet</div>';
+  const ml=document.getElementById('hMktList');
+  ml.innerHTML=listings.slice(0,3).map(l=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:18px">${l.emoji}</span>
+    <div style="flex:1"><div style="font-weight:700;font-size:13px">${esc(l.title)}</div><div style="font-family:var(--fb);font-size:10px;color:var(--muted)">📍 ${esc(l.location)}</div></div>
+    <span style="font-weight:700;font-size:12px;color:var(--green)">${fmtRWF(l.price)}</span>
+  </div>`).join('')||'<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No listings yet</div>';
+  const sl=document.getElementById('hSavList');
+  sl.innerHTML=sGoals.slice(0,3).map(g=>{
+    const pct=Math.round(g.saved/g.target*100);
+    return`<div style="margin-bottom:.75rem">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:3px"><span>${g.emoji} ${esc(g.name)}</span><span style="font-family:var(--fb);color:var(--muted)">${pct}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:var(--green)"></div></div>
+    </div>`;
+  }).join('')||'<div style="font-family:var(--fb);font-size:12px;color:var(--muted);padding:1rem 0">No savings goals</div>';
+}
+refreshHome();
+</script>
+</body>
+</html>
